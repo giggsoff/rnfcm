@@ -1,15 +1,24 @@
 import React from 'react';
-import {StyleSheet, Platform, Image, Text, View, ScrollView, AsyncStorage} from 'react-native';
+import {StyleSheet, Platform, Image, Text, View, ScrollView, AsyncStorage, PermissionsAndroid} from 'react-native';
 
 import firebase from 'react-native-firebase';
 import type {RemoteMessage} from 'react-native-firebase';
 
-import MapView, { UrlTile, PROVIDER_OSMDROID } from 'react-native-maps';
+import MapView, {UrlTile, PROVIDER_OSMDROID, Marker, Polyline} from 'react-native-maps';
 
 export default class App extends React.Component {
   constructor() {
     super();
-    this.state = {};
+    this.state = {
+      mapRegion: {
+        latitude: 59.88825,
+        longitude: 30.3324,
+        latitudeDelta: 0.3922,
+        longitudeDelta: 0.3421,
+      },
+      lastLat: null,
+      lastLong: null
+    };
   }
 
   async checkPermission() {
@@ -66,12 +75,67 @@ export default class App extends React.Component {
     }
   }
 
+  onRegionChange(region, lastLat, lastLong) {
+    this.setState({
+      mapRegion: region,
+      // If there are no new values set the current ones
+      lastLat: lastLat || this.state.lastLat,
+      lastLong: lastLong || this.state.lastLong
+    });
+  }
+  androidLocation = {};
+
+  initialGeolocation(){
+    delete this.androidLocation;
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        console.warn('LOCATION getCurrentPosition success', position);
+        let region = {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          latitudeDelta: 0.00922 * 2.5,
+          longitudeDelta: 0.00421 * 2.5
+        };
+        this.onRegionChange(region, region.latitude, region.longitude);
+      },
+      (error) => {
+        console.warn('LOCATION getCurrentPosition error', error.message || error);
+        if (Platform.OS === 'android'){
+          this.androidLocation = setTimeout(this.initialGeolocation, 500);
+        }
+      },
+      {
+        enableHighAccuracy: (Platform.OS !== 'android'),
+        timeout: 10000,
+        maximumAge: 500
+      }
+    );
+  }
+  async requestPermissionGPS() {
+    try {
+      const granted = await PermissionsAndroid.requestMultiple(
+        [PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+          PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION]
+      );
+      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+        console.log("You can use the location");
+      } else {
+        console.log("Location permission denied")
+      }
+      this.initialGeolocation();
+    } catch (err) {
+      console.warn(err)
+    }
+  }
+
   async componentDidMount() {
     // TODO: You: Do firebase things
     //const { user } = await firebase.auth().signInAnonymously();
     //console.warn('User -> ', user.toJSON());
 
     //await firebase.analytics().logEvent('foo', {bar: '123'});
+
+    await this.requestPermissionGPS();
 
     await this.checkPermission();
 
@@ -141,16 +205,36 @@ export default class App extends React.Component {
     return (
       <View style={styles.container}>
         <MapView
+          provider={'osmdroid'}
           style={styles.map}
-          initialRegion={{
-            latitude: 37.78825,
-            longitude: -122.4324,
-            latitudeDelta: 0.0922,
-            longitudeDelta: 0.0421,
-          }}
-          mapType={MapView.MAP_TYPES.NONE}
-          provider={PROVIDER_OSMDROID}
+          initialRegion={this.state.region}
+          region={this.state.mapRegion}
+          //onRegionChange={this.onRegionChange}>
+          //mapType={MapView.MAP_TYPES.NONE}
         >
+          <Marker
+            coordinate={{
+              latitude: (this.state.lastLat + 0.00050) || 59.904435,
+              longitude: (this.state.lastLong + 0.00050) || 30.307153
+            }}
+            title={"Here I am"}
+            description={"Current position"}
+            opacity={0.6}
+          />
+          <Polyline
+            coordinates={[
+              {
+                latitude: (this.state.lastLat + 0.00050) || 59.904435,
+                longitude: (this.state.lastLong + 0.00050) || 30.307153
+              },
+              { latitude: (this.state.lastLat + 0.01050) || 59.954435,
+                longitude: (this.state.lastLong + 0.01050) || 30.357153
+              }
+            ]}
+            strokeColor="#005"
+            strokeWidth={4}
+            opacity={0.6}
+          />
           <UrlTile
             urlTemplate="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             maximumZ={19}
