@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import {Tab} from "./config/navigation";
+import Application from "./config/navigation";
 import firebase, {RemoteMessage} from "react-native-firebase";
 import {AsyncStorage, PermissionsAndroid} from "react-native";
 import BottomTabNavigator from "./config/navigation";
@@ -61,26 +61,7 @@ export default class App extends Component {
     }
   }
 
-  async requestPermissionGPS() {
-    try {
-      const granted = await PermissionsAndroid.requestMultiple(
-        [PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-          PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION]
-      );
-      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-        console.log("You can use the location");
-      } else {
-        console.log("Location permission denied")
-      }
-      this.initialGeolocation();
-    } catch (err) {
-      console.warn(err)
-    }
-  }
-
   async componentDidMount() {
-
-    await this.requestPermissionGPS();
 
     await this.checkPermission();
 
@@ -147,6 +128,6 @@ export default class App extends Component {
   }
 
   render() {
-    return (<BottomTabNavigator />);
+    return (<Application />);
   }
 }

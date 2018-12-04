@@ -1,11 +1,23 @@
 import React from "react";
-import {createBottomTabNavigator} from "react-navigation";
+import {createMaterialTopTabNavigator, createAppContainer, withNavigationFocus} from "react-navigation";
 
 import Map from '../views/Map';
 import First from '../views/First';
 import Home from '../views/Home';
 
-const BottomTabNavigator = createBottomTabNavigator({
+function lazyScreen(Screen){
+  return withNavigationFocus(class extends React.Component {
+    render(){
+      if(!this.props.isFocused){
+        return null;
+      }
+
+      return <Screen {...this.props}/>;
+    }
+  })
+}
+let MapScreen = lazyScreen(Map);
+const MaterialTopTabNavigator = createMaterialTopTabNavigator({
   Home,
   First,
   Map
@@ -18,4 +30,6 @@ const BottomTabNavigator = createBottomTabNavigator({
   }),
 });
 
-export default BottomTabNavigator;
+const Application = createAppContainer(MaterialTopTabNavigator);
+
+export default Application;

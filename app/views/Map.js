@@ -1,38 +1,65 @@
-import React, { Component } from "react";
-import {ScrollView, Text, StyleSheet, Platform, View} from 'react-native';
-
-
-import MapView, {UrlTile, PROVIDER_OSMDROID, Marker, Polyline} from 'react-native-maps';
+import React, {Component} from "react";
+import {ScrollView, Text, StyleSheet, Platform, View, PermissionsAndroid} from 'react-native';
+import MapView, {UrlTile, Marker, Polyline} from 'react-native-maps';
+import _ from 'lodash';
 
 class Map extends Component {
 
-  constructor() {
-    super();
+  map = null;
+
+  constructor(props, context, updater) {
+    super(props, context, updater);
     this.state = {
-      mapRegion: {
-        latitude: 59.88825,
+      region: {
+        latitude: 51.88825,
         longitude: 30.3324,
         latitudeDelta: 0.3922,
         longitudeDelta: 0.3421,
       },
       lastLat: null,
-      lastLong: null
+      lastLong: null,
+      regionSet: false,
+      ready: false,
     };
   }
 
-  onRegionChange(region, lastLat, lastLong) {
+  onLocationChange(lastLat, lastLong) {
+    //console.warn(this.map);
     this.setState({
-      mapRegion: region,
-      // If there are no new values set the current ones
       lastLat: lastLat || this.state.lastLat,
       lastLong: lastLong || this.state.lastLong
     });
   }
+  _onMapChange = (region) => {
+    if(this.state.ready) {
+      setTimeout(() => this.map.animateToRegion(region), 10);
+    }
+    this.setState({
+      region: region,
+      regionSet: true
+    });
+  };
+
+  onMapReady = (e) => {
+    if(!this.state.ready) {
+      this.setState({ready: true});
+    }
+  };
+
+  onRegionChange = (region) => {
+    console.log('onRegionChange', region);
+  };
+
+  onRegionChangeComplete = (region) => {
+    console.log('onRegionChangeComplete', region);
+  };
 
   androidLocation = {};
 
   initialGeolocation() {
-    delete this.androidLocation;
+    if (this.androidLocation) {
+      delete this.androidLocation;
+    }
     navigator.geolocation.getCurrentPosition(
       (position) => {
         console.warn('LOCATION getCurrentPosition success', position);
@@ -42,34 +69,72 @@ class Map extends Component {
           latitudeDelta: 0.00922 * 2.5,
           longitudeDelta: 0.00421 * 2.5
         };
-        this.onRegionChange(region, region.latitude, region.longitude);
+        if(!this.state.regionSet) {
+          this._onMapChange(region);
+        }
+        this.onLocationChange(region.latitude, region.longitude);
+        this.androidLocation = setTimeout(() => this.initialGeolocation(), 5000);
       },
       (error) => {
         console.warn('LOCATION getCurrentPosition error', error.message || error);
         if (Platform.OS === 'android') {
-          this.androidLocation = setTimeout(this.initialGeolocation, 500);
+          this.androidLocation = setTimeout(() => this.initialGeolocation(), 1000);
         }
       },
       {
         enableHighAccuracy: (Platform.OS !== 'android'),
-        timeout: 10000,
-        maximumAge: 500
+        timeout: 2000
       }
     );
   }
 
+  async requestPermissionGPS() {
+    try {
+      const granted = await PermissionsAndroid.requestMultiple(
+        [PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+          PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION]
+      );
+      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+        console.log("You can use the location");
+      } else {
+        console.log("Location permission denied")
+      }
+      this.initialGeolocation();
+    } catch (err) {
+      console.warn(err)
+    }
+  }
+
+  async componentDidMount() {
+    console.warn('MAP mounted');
+    await this.requestPermissionGPS();
+  }
+
+  async componentWillUnmount() {
+    console.warn('MAP will unmount');
+    if (this.androidLocation) {
+      delete this.androidLocation;
+    }
+  }
+
   render() {
+
+    const { currentRegion } = this.state.region;
+
     return (
       <View style={styles.container}>
         <MapView
+          ref={ map => { this.map = map }}
           provider={'osmdroid'}
           style={styles.map}
-          initialRegion={this.state.region}
-          region={this.state.mapRegion}
-          //onRegionChange={this.onRegionChange}>
-          //mapType={MapView.MAP_TYPES.NONE}
+          initialRegion={currentRegion}
+          //region={this.state.region}
+          onMapReady={this.onMapReady}
+          onRegionChange={this.onRegionChange}
+          onRegionChangeComplete={this.onRegionChangeComplete}
+          mapType={MapView.MAP_TYPES.NONE}
         >
-          <Marker
+          <MapView.Marker
             coordinate={{
               latitude: (this.state.lastLat + 0.00050) || 59.904435,
               longitude: (this.state.lastLong + 0.00050) || 30.307153
@@ -78,7 +143,7 @@ class Map extends Component {
             description={"Current position"}
             opacity={0.6}
           />
-          <Polyline
+          <MapView.Polyline
             coordinates={[
               {
                 latitude: (this.state.lastLat + 0.00050) || 59.904435,
@@ -106,9 +171,7 @@ class Map extends Component {
 
 const styles = StyleSheet.create({
   container: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'flex-end',
-    alignItems: 'center',
+    flex: 1,
   },
   map: {
     ...StyleSheet.absoluteFillObject,
