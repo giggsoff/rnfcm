@@ -22,12 +22,11 @@
     "preset": "react-native"
   },
   "dependencies": {
-    "lodash": "^4.17.11",
-    "react": "16.5.0",
+    "react": "16.6.3",
     "react-native": "0.57.1",
     "react-native-firebase": "^5.1.0",
-    "react-native-foldview": "^1.2.1",
     "react-native-maps": "git://github.com/giggsoff/react-native-maps#osmdroid+hotfix",
+    "react-native-super-grid": "^2.4.3",
     "react-native-vector-icons": "^6.1.0",
     "react-navigation": "^3.0.4"
   }

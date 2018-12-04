@@ -1,14 +1,13 @@
 import React, {Component} from "react";
 import {ScrollView, Text, StyleSheet, Platform, View, PermissionsAndroid} from 'react-native';
 import MapView, {UrlTile, Marker, Polyline} from 'react-native-maps';
-import _ from 'lodash';
+import {NavigationEvents} from 'react-navigation';
 
 class Map extends Component {
-
   map = null;
-
   constructor(props, context, updater) {
     super(props, context, updater);
+
     this.state = {
       region: {
         latitude: 51.88825,
@@ -16,6 +15,18 @@ class Map extends Component {
         latitudeDelta: 0.3922,
         longitudeDelta: 0.3421,
       },
+      polyline: [
+        /*[
+          {
+            latitude: 59.904435,
+            longitude: 30.307153
+          },
+          {
+            latitude: 59.954435,
+            longitude: 30.357153
+          }
+        ]*/
+      ],
       lastLat: null,
       lastLong: null,
       regionSet: false,
@@ -23,25 +34,30 @@ class Map extends Component {
     };
   }
 
-  onLocationChange(lastLat, lastLong) {
+  _onLocationChange = (lastLat, lastLong) => {
     //console.warn(this.map);
     this.setState({
       lastLat: lastLat || this.state.lastLat,
       lastLong: lastLong || this.state.lastLong
     });
-  }
+  };
+  _onPress = () => {
+    this.setState({
+      regionSet: true
+    });
+  };
   _onMapChange = (region) => {
-    if(this.state.ready) {
+    if (this.state.ready) {
       setTimeout(() => this.map.animateToRegion(region), 10);
     }
     this.setState({
       region: region,
-      regionSet: true
+      //regionSet: true
     });
   };
 
   onMapReady = (e) => {
-    if(!this.state.ready) {
+    if (!this.state.ready) {
       this.setState({ready: true});
     }
   };
@@ -69,10 +85,10 @@ class Map extends Component {
           latitudeDelta: 0.00922 * 2.5,
           longitudeDelta: 0.00421 * 2.5
         };
-        if(!this.state.regionSet) {
+        if (!this.state.regionSet) {
           this._onMapChange(region);
         }
-        this.onLocationChange(region.latitude, region.longitude);
+        this._onLocationChange(region.latitude, region.longitude);
         this.androidLocation = setTimeout(() => this.initialGeolocation(), 5000);
       },
       (error) => {
@@ -117,14 +133,28 @@ class Map extends Component {
     }
   }
 
+  onDidFocus = () => {
+    let pl = this.props.navigation.getParam('polyline', []);
+    console.warn(pl);
+    this.setState({polyline: pl});
+  };
+
   render() {
 
-    const { currentRegion } = this.state.region;
+    const {currentRegion} = this.state.region;
 
     return (
       <View style={styles.container}>
+        <NavigationEvents
+          onWillFocus={payload => console.warn('will focus', payload)}
+          onDidFocus={payload => this.onDidFocus()}
+          onWillBlur={payload => console.warn('will blur', payload)}
+          onDidBlur={payload => console.warn('did blur', payload)}
+        />
         <MapView
-          ref={ map => { this.map = map }}
+          ref={map => {
+            this.map = map
+          }}
           provider={'osmdroid'}
           style={styles.map}
           initialRegion={currentRegion}
@@ -133,6 +163,8 @@ class Map extends Component {
           onRegionChange={this.onRegionChange}
           onRegionChangeComplete={this.onRegionChangeComplete}
           mapType={MapView.MAP_TYPES.NONE}
+          onPress={this._onPress}
+          onPanDrag={this._onPress}
         >
           <MapView.Marker
             coordinate={{
@@ -143,21 +175,16 @@ class Map extends Component {
             description={"Current position"}
             opacity={0.6}
           />
-          <MapView.Polyline
-            coordinates={[
-              {
-                latitude: (this.state.lastLat + 0.00050) || 59.904435,
-                longitude: (this.state.lastLong + 0.00050) || 30.307153
-              },
-              {
-                latitude: (this.state.lastLat + 0.01050) || 59.954435,
-                longitude: (this.state.lastLong + 0.01050) || 30.357153
-              }
-            ]}
-            strokeColor="#005"
-            strokeWidth={4}
-            opacity={0.6}
-          />
+          {
+            this.state.polyline.map((item, index) => (
+              <MapView.Polyline
+                coordinates={item}
+                strokeColor="#005"
+                strokeWidth={4}
+                opacity={0.6}
+              />
+            ))
+          }
           <UrlTile
             urlTemplate="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             maximumZ={19}
