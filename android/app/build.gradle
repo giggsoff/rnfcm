@@ -153,6 +153,7 @@ android {
 }
 
 dependencies {
+    compile project(':react-native-gesture-handler')
 
   //noinspection GradleDynamicVersion
   implementation "com.facebook.react:react-native:+"

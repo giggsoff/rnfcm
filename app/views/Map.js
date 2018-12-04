@@ -48,7 +48,7 @@ class Map extends Component {
   };
   _onMapChange = (region) => {
     if (this.state.ready) {
-      setTimeout(() => this.map.animateToRegion(region), 10);
+      setTimeout(() => {if (this.map) this.map.animateToRegion(region)}, 10);
     }
     this.setState({
       region: region,
@@ -129,6 +129,7 @@ class Map extends Component {
   async componentWillUnmount() {
     console.warn('MAP will unmount');
     if (this.androidLocation) {
+      clearTimeout(this.androidLocation);
       delete this.androidLocation;
     }
   }

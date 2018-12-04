@@ -22,12 +22,14 @@
     "preset": "react-native"
   },
   "dependencies": {
-    "react": "16.6.3",
-    "react-native": "0.57.1",
+    "react": "^16.6.3",
+    "react-native": "^0.57.7",
+    "react-native-elements": "^0.19.1",
     "react-native-firebase": "^5.1.0",
+    "react-native-gesture-handler": "^1.0.10",
     "react-native-maps": "git://github.com/giggsoff/react-native-maps#osmdroid+hotfix",
     "react-native-super-grid": "^2.4.3",
     "react-native-vector-icons": "^6.1.0",
-    "react-navigation": "^3.0.4"
+    "react-navigation": "^3.0.5"
   }
 }

@@ -1,11 +1,25 @@
 import React from "react";
-import {createMaterialTopTabNavigator, createAppContainer} from "react-navigation";
+import {createMaterialTopTabNavigator, createSwitchNavigator, createStackNavigator} from "react-navigation";
+import { Platform, StatusBar } from "react-native";
 
 import Map from '../views/Map';
 import First from '../views/First';
 import Home from '../views/Home';
+import SignIn from "../views/SignIn";
 
-const MaterialTopTabNavigator = createMaterialTopTabNavigator({
+const headerStyle = {
+  marginTop: Platform.OS === "android" ? StatusBar.currentHeight : 0
+};
+export const SignedOut = createStackNavigator({
+  SignIn: {
+    screen: SignIn,
+    navigationOptions: {
+      title: "Sign In",
+      headerStyle
+    }
+  }
+});
+export const MaterialTopTabNavigator = createMaterialTopTabNavigator({
   Home,
   First,
   Map
@@ -18,6 +32,14 @@ const MaterialTopTabNavigator = createMaterialTopTabNavigator({
   }),
 });
 
-const Application = createAppContainer(MaterialTopTabNavigator);
-
-export default Application;
+export const createRootNavigator = (signedIn = false) => {
+  return createSwitchNavigator(
+    {
+      SignedIn: MaterialTopTabNavigator,
+      SignedOut: SignedOut
+    },
+    {
+      initialRouteName: signedIn ? "SignedIn" : "SignedOut"
+    }
+  );
+};
