@@ -1,10 +1,13 @@
 import React, { Component } from "react";
 import { ScrollView, Text, StyleSheet, Button} from 'react-native';
 
-import {onSignOut} from "../auth";
+import { removeUserToken } from '../actions/actions';
+import { connect } from 'react-redux';
 
 class Home extends Component {
-
+  static navigationOptions = {
+    title: 'Main',
+  };
   render() {
     return (
       <ScrollView>
@@ -13,13 +16,21 @@ class Home extends Component {
           buttonStyle={{ marginTop: 20 }}
           backgroundColor="#03A9F4"
           title="SIGN OUT"
-          onPress={() => {
-            onSignOut().then(() => this.props.navigation.navigate("SignedOut"));
-          }}
+          onPress={this._signOutAsync}
         />
       </ScrollView>
     );
   }
+  _signOutAsync = () => {
+    this.props.removeUserToken()
+      .then(() => {
+        this.props.navigation.navigate('SignedOut');
+      })
+      .catch(error => {
+        this.setState({ error })
+      })
+
+  };
 }
 
 const styles = StyleSheet.create({
@@ -30,5 +41,12 @@ const styles = StyleSheet.create({
     marginTop: 300,
   },
 });
+const mapStateToProps = state => ({
+  token: state.token,
+});
 
-export default Home;
+const mapDispatchToProps = dispatch => ({
+  removeUserToken: () => dispatch(removeUserToken()),
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(Home);

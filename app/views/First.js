@@ -1,6 +1,8 @@
 import React, {Component} from 'react';
 import {StyleSheet, View, Text, Button} from 'react-native';
 import GridView from 'react-native-super-grid';
+import { removeUserToken } from '../actions/actions';
+import { connect } from 'react-redux';
 
 class First extends Component {
   constructor(props, context, updater) {
@@ -159,4 +161,12 @@ const styles = StyleSheet.create({
   },
 });
 
-export default First;
+const mapStateToProps = state => ({
+  token: state.token,
+});
+
+const mapDispatchToProps = dispatch => ({
+  removeUserToken: () => dispatch(removeUserToken()),
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(First);

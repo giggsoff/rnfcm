@@ -2,6 +2,8 @@ import React, {Component} from "react";
 import {ScrollView, Text, StyleSheet, Platform, View, PermissionsAndroid} from 'react-native';
 import MapView, {UrlTile, Marker, Polyline} from 'react-native-maps';
 import {NavigationEvents} from 'react-navigation';
+import { removeUserToken } from '../actions/actions';
+import { connect } from 'react-redux';
 
 class Map extends Component {
   map = null;
@@ -235,4 +237,12 @@ const styles = StyleSheet.create({
   }
 });
 
-export default Map;
+const mapStateToProps = state => ({
+  token: state.token,
+});
+
+const mapDispatchToProps = dispatch => ({
+  removeUserToken: () => dispatch(removeUserToken()),
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(Map);

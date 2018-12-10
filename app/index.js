@@ -3,8 +3,8 @@ import {createMaterialTopTabNavigator, createAppContainer} from "react-navigatio
 import {createRootNavigator, MaterialTopTabNavigator} from "./config/navigation";
 import firebase, {RemoteMessage} from "react-native-firebase";
 import {AsyncStorage, PermissionsAndroid} from "react-native";
-
-import { isSignedIn } from "./auth";
+import {Provider} from 'react-redux';
+import store from './store';
 
 export default class App extends Component {
 
@@ -72,13 +72,7 @@ export default class App extends Component {
   }
 
   async componentDidMount() {
-
-    isSignedIn()
-      .then(res => this.setState({ signedIn: res, checkedSignIn: true }))
-      .catch(err => alert("An error occurred"));
-
     await this.checkPermission();
-
     const notificationOpen: NotificationOpen = await firebase.notifications().getInitialNotification();
     if (notificationOpen) {
       const action = notificationOpen.action;
@@ -142,13 +136,11 @@ export default class App extends Component {
   }
 
   render() {
-    const { checkedSignIn, signedIn } = this.state;
-    // If we haven't checked AsyncStorage yet, don't render anything (better ways to do this)
-    if (!checkedSignIn) {
-      //console.warn('not checkedSignIn')
-      return null;
-    }
-    const Application = createAppContainer(createRootNavigator(signedIn));
-    return (<Application />);
+    const Application = createAppContainer(createRootNavigator);
+    return (
+      <Provider store={store}>
+        <Application/>
+      </Provider>
+    );
   }
 }
