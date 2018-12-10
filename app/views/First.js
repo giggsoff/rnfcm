@@ -1,13 +1,14 @@
 import React, {Component} from 'react';
-import {StyleSheet, View, Text, Button} from 'react-native';
+import {StyleSheet, View, Text, Button, RefreshControl} from 'react-native';
 import GridView from 'react-native-super-grid';
-import { removeUserToken } from '../actions/actions';
-import { connect } from 'react-redux';
+import {removeUserToken} from '../actions/actions';
+import {connect} from 'react-redux';
 
 class First extends Component {
   constructor(props, context, updater) {
     super(props, context, updater);
     this.state = {
+      refreshing: false,
       items: [
         {
           name: 'TURQUOISE', code: '#1abc9c', date: '05:13 4 Dec 2018', score: 56, polyline: [
@@ -95,34 +96,50 @@ class First extends Component {
   _onPressButton = (item) => {
     this.props.navigation.navigate('Map', {polyline: [item.polyline]});
   };
+  _onRefresh = () => {
+    this.setState({refreshing: true});
+    console.warn("REFRESH");
+    this.setState({refreshing: false});
+  };
 
   render() {
     return (
-      <GridView
-        itemDimension={150}
-        items={this.state.items}
-        style={styles.gridView}
-        renderItem={item => (
-          <View style={[styles.itemContainer, {backgroundColor: item.code}]}>
-            <View style={[styles.itemContainer1]}>
-              <Text style={styles.itemScore}>Your score: {item.score}</Text>
+      <View style={styles.parentView}>
+        <GridView
+          itemDimension={150}
+          items={this.state.items}
+          style={styles.gridView}
+          refreshControl={
+            <RefreshControl
+              refreshing={this.state.refreshing}
+              onRefresh={this._onRefresh}
+            />
+          }
+          renderItem={item => (
+            <View style={[styles.itemContainer, {backgroundColor: item.code}]}>
+              <View style={[styles.itemContainer1]}>
+                <Text style={styles.itemScore}>Your score: {item.score}</Text>
+              </View>
+              <View style={[styles.itemContainer2]}>
+                <Text style={styles.itemName}>{item.name}</Text>
+                <Text style={styles.itemDate}>{item.date}</Text>
+                <Button style={styles.itemButton} onPress={() => this._onPressButton(item)}
+                        title="Learn More"/>
+              </View>
             </View>
-            <View style={[styles.itemContainer2]}>
-              <Text style={styles.itemName}>{item.name}</Text>
-              <Text style={styles.itemDate}>{item.date}</Text>
-              <Button style={styles.itemButton} onPress={() => this._onPressButton(item)}
-                      title="Learn More"/>
-            </View>
-          </View>
-        )}
-      />
+          )}
+        />
+      </View>
     );
   }
 }
 
 const styles = StyleSheet.create({
+  parentView: {
+    marginTop: 10,
+    flex: 1,
+  },
   gridView: {
-    paddingTop: 25,
     flex: 1,
   },
   itemContainer1: {
@@ -134,7 +151,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   itemContainer: {
-    flex:1,
+    flex: 1,
     borderRadius: 5,
     padding: 10,
     height: 150,
