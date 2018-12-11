@@ -153,6 +153,7 @@ android {
 }
 
 dependencies {
+    compile project(':react-native-imei')
     compile project(':react-native-gesture-handler')
 
   //noinspection GradleDynamicVersion

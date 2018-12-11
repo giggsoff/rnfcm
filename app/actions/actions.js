@@ -24,9 +24,10 @@ export const error = error => ({
   error,
 });
 
-export const login = (username, password) => {
+export const login = (username, password, number, imei) => {
   return (dispatch) => {
-    if (!username || !password) {
+    console.warn(imei);
+    if (!username || !password || !number || !imei) {
       dispatch(loading(false));
       dispatch(error(true));
       return new Promise((resolve, reject) => {
