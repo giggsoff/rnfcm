@@ -1,13 +1,21 @@
 import React, {Component} from 'react';
-import {StyleSheet, View, Text, Button, RefreshControl} from 'react-native';
+import {StyleSheet, View, Text, Button, RefreshControl, Modal, Platform} from 'react-native';
 import GridView from 'react-native-super-grid';
 import {removeUserToken} from '../actions/actions';
 import {connect} from 'react-redux';
+import Calendar from 'react-native-calendar-select';
+import moment from 'moment';
 
 class First extends Component {
+  static navigationOptions = {
+    title: 'Results',
+  };
+
   constructor(props, context, updater) {
     super(props, context, updater);
     this.state = {
+      startDate: moment(new Date()).subtract(1, 'month'),
+      endDate: moment(new Date()),
       refreshing: false,
       items: [
         {
@@ -91,20 +99,73 @@ class First extends Component {
         }
       ]
     };
+    this.confirmDate = this.confirmDate.bind(this);
+    this.openCalendar = this.openCalendar.bind(this);
+  }
+
+  confirmDate({startDate, endDate, startMoment, endMoment}) {
+    this.setState({
+      startDate,
+      endDate
+    });
+  }
+
+  openCalendar() {
+    this.calendar && this.calendar.open();
   }
 
   _onPressButton = (item) => {
     this.props.navigation.navigate('Map', {polyline: [item.polyline]});
   };
+
   _onRefresh = () => {
     this.setState({refreshing: true});
     console.warn("REFRESH");
+    console.warn(this.props.token);
     this.setState({refreshing: false});
   };
 
   render() {
+    let color = {
+      subColor: '#f0f0f0'
+    };
     return (
       <View style={styles.parentView}>
+        <View style={styles.container}>
+          <View style={styles.buttonContainer}>
+            <Text
+              style={{
+                color: '#6d95da',
+                fontWeight: 'bold',
+                textAlign: 'center',
+              }}
+            >
+              From {moment(this.state.startDate).format("YYYY-MM-DD")} to {moment(this.state.endDate).format("YYYY-MM-DD")}
+            </Text>
+          </View>
+          <View style={styles.buttonContainer}>
+            <Button
+              buttonStyle={{width: 30}}
+              backgroundColor="#03A9F4"
+              title="Open Calendar"
+              onPress={this.openCalendar}
+            />
+          </View>
+        </View>
+
+        <Calendar
+          i18n="en"
+          ref={(calendar) => {
+            this.calendar = calendar;
+          }}
+          color={color}
+          format="YYYYMMDD"
+          minDate={moment(new Date()).subtract(6, 'month').format("YYYYMMDD")}
+          maxDate={moment(new Date()).format("YYYYMMDD")}
+          startDate={this.state.startDate}
+          endDate={this.state.endDate}
+          onConfirm={this.confirmDate}
+        />
         <GridView
           itemDimension={150}
           items={this.state.items}
@@ -135,6 +196,15 @@ class First extends Component {
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10
+  },
+  buttonContainer: {
+    flex: 1,
+  },
   parentView: {
     marginTop: 10,
     flex: 1,

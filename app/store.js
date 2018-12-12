@@ -4,11 +4,11 @@ import rootReducer from './reducers/reducers';
 
 const middlewares = [ReduxThunk];
 
-const store = createStore(
-  rootReducer,
-  {},// default state of the application
-  compose(applyMiddleware(...middlewares)),
-);
+export default function configureStore(initialState) {
+  return createStore(
+    rootReducer,
+    initialState,// default state of the application
+    compose(applyMiddleware(...middlewares)),
+  );
+}
 
-
-export default store;

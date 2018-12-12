@@ -4,7 +4,7 @@ import {createRootNavigator, MaterialTopTabNavigator} from "./config/navigation"
 import firebase, {RemoteMessage} from "react-native-firebase";
 import {AsyncStorage, PermissionsAndroid} from "react-native";
 import {Provider} from 'react-redux';
-import store from './store';
+import configureStore from './store';
 
 export default class App extends Component {
 
@@ -15,6 +15,10 @@ export default class App extends Component {
       signedIn: false,
       checkedSignIn: false
     };
+    const initialState = {
+      token : null
+    };
+    this.store = configureStore(initialState);
   }
 
   async checkPermission() {
@@ -138,7 +142,7 @@ export default class App extends Component {
   render() {
     const Application = createAppContainer(createRootNavigator);
     return (
-      <Provider store={store}>
+      <Provider store={this.store}>
         <Application/>
       </Provider>
     );
