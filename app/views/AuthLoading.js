@@ -7,7 +7,7 @@ import {
   View,
 } from 'react-native';
 import { connect } from 'react-redux';
-import { getUserToken } from '../actions/actions';
+import { getUserToken } from '../sagas/sagas';
 
 class AuthLoadingScreen extends React.Component {
   static navigationOptions = {
@@ -24,7 +24,8 @@ class AuthLoadingScreen extends React.Component {
   // Fetch the token from storage then navigate to our appropriate place
   _bootstrapAsync = () => {
 
-    this.props.getUserToken().then(() => {
+    this.props.getUserToken().then((result) => {
+      console.warn(result);
       this.props.navigation.navigate(this.props.token.token !== null ? 'SignedIn' : 'SignedOut');
     })
       .catch(error => {
@@ -58,7 +59,7 @@ const mapStateToProps = state => ({
 
 
 const mapDispatchToProps = dispatch => ({
-  getUserToken: () => dispatch(getUserToken()),
+  getUserToken: () => dispatch({type:'getUserToken'}),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(AuthLoadingScreen);

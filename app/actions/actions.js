@@ -1,5 +1,6 @@
-import {AsyncStorage} from 'react-native';
-
+function action(type, payload = {}) {
+  return {type, ...payload}
+}
 export const getToken = (token) => ({
   type: 'GET_TOKEN',
   token,
@@ -19,75 +20,12 @@ export const loading = bool => ({
   isLoading: bool,
 });
 
+export const ready = bool => ({
+  type: 'READY',
+  isLoading: bool,
+});
+
 export const error = error => ({
   type: 'ERROR',
   error,
 });
-
-export const login = (username, password, number, imei) => {
-  return (dispatch) => {
-    console.warn(imei);
-    if (!username || !password || !number || !imei) {
-      dispatch(loading(false));
-      dispatch(error(true));
-      return new Promise((resolve, reject) => {
-        throw new Error("Failed to auth");
-      });
-    }
-    /*fetch('http://192.168.0.115:8080/api/user', {
-      method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({username: username, password: password})
-    })
-      .then((res) => res.json())*/
-    console.warn("OK");
-    return AsyncStorage.setItem('userToken', 'abc').then(res => {
-      dispatch(loading(false));
-      dispatch(error(false));
-      dispatch(saveToken('token saved'));
-    })
-      .catch((err) => {
-        dispatch(loading(false));
-        dispatch(error(err.message || 'ERROR'));
-      });
-  }
-};
-
-export const getUserToken = () => dispatch =>
-  AsyncStorage.getItem('userToken')
-    .then((data) => {
-      dispatch(loading(false));
-      dispatch(getToken(data));
-    })
-    .catch((err) => {
-      dispatch(loading(false));
-      dispatch(error(err.message || 'ERROR'));
-    });
-
-
-export const saveUserToken = () => dispatch => {
-  console.warn(this.props);
-  return AsyncStorage.setItem('userToken', 'abc')
-    .then((data) => {
-      dispatch(loading(false));
-      dispatch(saveToken('token saved'));
-    })
-    .catch((err) => {
-      dispatch(loading(false));
-      dispatch(error(err.message || 'ERROR'));
-    })
-};
-
-export const removeUserToken = () => dispatch =>
-  AsyncStorage.removeItem('userToken')
-    .then((data) => {
-      dispatch(loading(false));
-      dispatch(removeToken(data));
-    })
-    .catch((err) => {
-      dispatch(loading(false));
-      dispatch(error(err.message || 'ERROR'));
-    });
