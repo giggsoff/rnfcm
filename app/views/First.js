@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import {StyleSheet, View, Text, Button, RefreshControl, Modal, Platform} from 'react-native';
+import {StyleSheet, View, Text, Button, RefreshControl, Modal, Platform, TouchableOpacity} from 'react-native';
 import GridView from 'react-native-super-grid';
 import {getLog} from '../actions/actions';
 import {startBackgroundTimer} from '../actions/timer';
@@ -17,90 +17,12 @@ class First extends Component {
     this.state = {
       DeviceIMEI: "",
       token: null,
-      startDate: moment(new Date()).subtract(1, 'month'),
+      startDate: moment(new Date()).subtract(1, 'week'),
       endDate: moment(new Date()),
       refreshing: false,
-      items: [
-        {
-          name: 'TURQUOISE', code: '#1abc9c', date: '05:13 4 Dec 2018', score: 56, polyline: [
-            {
-              latitude: 59.904435,
-              longitude: 30.307153
-            },
-            {
-              latitude: 59.944435,
-              longitude: 30.367153
-            },
-            {
-              latitude: 59.954435,
-              longitude: 30.357153
-            }
-          ]
-        },
-        {
-          name: 'EMERALD', code: '#2ecc71', date: '09:13 4 Dec 2018', score: 78, polyline: [
-            {
-              latitude: 59.914435,
-              longitude: 30.317153
-            },
-            {
-              latitude: 59.934435,
-              longitude: 30.357153
-            },
-            {
-              latitude: 59.944435,
-              longitude: 30.357153
-            }
-          ]
-        },
-        {
-          name: 'PETER RIVER', code: '#3498db', date: '05:13 3 Dec 2018', score: 93, polyline: [
-            {
-              latitude: 59.914435,
-              longitude: 30.357153
-            },
-            {
-              latitude: 59.943435,
-              longitude: 30.361153
-            },
-            {
-              latitude: 59.953435,
-              longitude: 30.357123
-            }
-          ]
-        }, {
-          name: 'AMETHYST', code: '#9b59b6', date: '05:13 2 Dec 2018', score: 82, polyline: [
-            {
-              latitude: 59.924435,
-              longitude: 30.307153
-            },
-            {
-              latitude: 59.914435,
-              longitude: 30.317153
-            },
-            {
-              latitude: 59.914435,
-              longitude: 30.357153
-            }
-          ]
-        },
-        {
-          name: 'WET ASPHALT', code: '#34495e', date: '05:13 1 Dec 2018', score: 76, polyline: [
-            {
-              latitude: 59.904445,
-              longitude: 30.301153
-            },
-            {
-              latitude: 59.945435,
-              longitude: 30.347153
-            },
-            {
-              latitude: 59.977435,
-              longitude: 30.359153
-            }
-          ]
-        }
-      ]
+      trips: [
+        //{"drivingIndex":["100"], "duration":["1 min"], "departure": ["Mannanmaentie"], "destination": ["Mannanmaentie"], "startTime": "2018-12-11T17:42:46+02:00", "endTime": "2018-12-11T17:44:06+02:00"},
+      ],
     };
     this.confirmDate = this.confirmDate.bind(this);
     this.openCalendar = this.openCalendar.bind(this);
@@ -112,11 +34,13 @@ class First extends Component {
       DeviceIMEI: IMEI.getImei(),
     })
   };
+
   confirmDate({startDate, endDate, startMoment, endMoment}) {
     this.setState({
       startDate,
       endDate
     });
+    this._onRefresh();
   }
 
   openCalendar() {
@@ -124,7 +48,7 @@ class First extends Component {
   }
 
   _onPressButton = (item) => {
-    this.props.navigation.navigate('Map', {polyline: [item.polyline]});
+    this.props.navigation.navigate('Map', {from: item.departure[0], to: item.destination[0]});
   };
 
   _onRefresh = () => {
@@ -134,19 +58,24 @@ class First extends Component {
     console.warn(this.state);
     this.setState({refreshing: false});
     this.props.startBackgroundTimer();
-    let { user, pass, number, DeviceIMEI } = this.state;
-    return this.props.getLog(this.props.token.token, DeviceIMEI, moment(this.state.startDate), moment(this.state.endDate)).then((data)=>{
+    let {user, pass, number, DeviceIMEI} = this.state;
+    return this.props.getLog(this.props.token.token, DeviceIMEI, moment(this.state.startDate), moment(this.state.endDate)).then((data) => {
+      this.setState({trips:data.fullTrips.trip});
       console.warn(data);
     }).catch((error) => {
       this.setState({error: error.message});
     });
   };
+
   async componentDidMount() {
     await this._getDeviceIMEI();
+    this._onRefresh();
   }
-  componentWillReceiveProps(nextProp){
+
+  componentWillReceiveProps(nextProp) {
     console.warn(nextProp)
   }
+
   render() {
     let color = {
       subColor: '#f0f0f0'
@@ -190,7 +119,7 @@ class First extends Component {
         />
         <GridView
           itemDimension={150}
-          items={this.state.items}
+          items={this.state.trips}
           style={styles.gridView}
           refreshControl={
             <RefreshControl
@@ -199,17 +128,25 @@ class First extends Component {
             />
           }
           renderItem={item => (
-            <View style={[styles.itemContainer, {backgroundColor: item.code}]}>
-              <View style={[styles.itemContainer1]}>
-                <Text style={styles.itemScore}>Your score: {item.score}</Text>
+            <TouchableOpacity onPress={() => this._onPressButton(item)}>
+              <View style={[styles.itemContainer]}>
+                <View style={[styles.itemContainer1]}>
+                  <Text style={styles.itemScore}>Your score: {item.drivingIndex[0]}</Text>
+                </View>
+                <View style={[styles.itemContainer2]}>
+                  <Text style={styles.itemDate}>Duration:</Text>
+                  <Text style={styles.itemName}>{item.duration[0]}</Text>
+                  <Text style={styles.itemDate}>Departure:</Text>
+                  <Text style={styles.itemName}>{item.departure[0]}</Text>
+                  <Text style={styles.itemDate}>Destination:</Text>
+                  <Text style={styles.itemName}>{item.destination[0]}</Text>
+                  <Text style={styles.itemDate}>Start:</Text>
+                  <Text style={styles.itemName}>{moment(item.startTime[0]).calendar()}</Text>
+                  <Text style={styles.itemDate}>End:</Text>
+                  <Text style={styles.itemName}>{moment(item.endTime[0]).calendar()}</Text>
+                </View>
               </View>
-              <View style={[styles.itemContainer2]}>
-                <Text style={styles.itemName}>{item.name}</Text>
-                <Text style={styles.itemDate}>{item.date}</Text>
-                <Button style={styles.itemButton} onPress={() => this._onPressButton(item)}
-                        title="Learn More"/>
-              </View>
-            </View>
+            </TouchableOpacity>
           )}
         />
       </View>
@@ -246,10 +183,11 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: 5,
     padding: 10,
-    height: 150,
+    height: 250,
+    backgroundColor: '#068806'
   },
   itemName: {
-    fontSize: 16,
+    fontSize: 13,
     color: '#fff',
     fontWeight: '600',
   },
@@ -261,7 +199,7 @@ const styles = StyleSheet.create({
   itemDate: {
     fontWeight: '600',
     fontSize: 12,
-    color: '#fff',
+    color: '#ccc',
   },
   itemButton: {
     fontWeight: '600',

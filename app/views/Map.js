@@ -2,11 +2,13 @@ import React, {Component} from "react";
 import {ScrollView, Text, StyleSheet, Platform, View, PermissionsAndroid} from 'react-native';
 import MapView, {UrlTile, Marker, Polyline} from 'react-native-maps';
 import {NavigationEvents} from 'react-navigation';
-import { removeUserToken } from '../actions/actions';
-import { connect } from 'react-redux';
+import {removeUserToken} from '../actions/actions';
+import {connect} from 'react-redux';
+import Geocoder from "react-native-geocoder-reborn";
 
 class Map extends Component {
   map = null;
+
   constructor(props, context, updater) {
     super(props, context, updater);
 
@@ -50,7 +52,9 @@ class Map extends Component {
   };
   _onMapChange = (region) => {
     if (this.state.ready) {
-      setTimeout(() => {if (this.map) this.map.animateToRegion(region)}, 10);
+      setTimeout(() => {
+        if (this.map) this.map.animateToRegion(region)
+      }, 10);
     }
     this.setState({
       region: region,
@@ -136,10 +140,35 @@ class Map extends Component {
     }
   }
 
+  async setPolyLine(from, to) {
+    try {
+      const fromObj = await Geocoder.geocodeAddress(from);
+      const toObj = await Geocoder.geocodeAddress(to);
+      if (fromObj && toObj) {
+        const polyline = [{
+          latitude: fromObj[0].position.lat,
+          longitude: fromObj[0].position.lng
+        }, {
+          latitude: toObj[0].position.lat,
+          longitude: toObj[0].position.lng
+        }];
+        /*if (this.map) this.map.fitToCoordinates(
+          polyline
+        );*/
+        this.setState({polyline: [polyline]});
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
   onDidFocus = () => {
-    let pl = this.props.navigation.getParam('polyline', []);
-    console.warn(pl);
-    this.setState({polyline: pl});
+    let from = this.props.navigation.getParam('from', null);
+    let to = this.props.navigation.getParam('to', null);
+    if (from && to) {
+      this.setPolyLine(from, to).then(() => {
+      });
+    }
   };
 
   render() {

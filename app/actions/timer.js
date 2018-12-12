@@ -15,7 +15,7 @@ const tick = (num) => {
 };
 export const startBackgroundTimer = () => (dispatch) => {
   clearInterval(timer);
-  timer = setInterval(() => dispatch(tick(moment())), 5000);
+  timer = setInterval(() => dispatch(tick({time:moment()})), 5000);
   dispatch(TIMER_START());
 };
 export const stopBackgroundTimer = () => {

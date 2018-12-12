@@ -78,6 +78,7 @@ export default class App extends Component {
   async componentDidMount() {
     await this.checkPermission();
     const notificationOpen: NotificationOpen = await firebase.notifications().getInitialNotification();
+
     if (notificationOpen) {
       const action = notificationOpen.action;
       const notification: Notification = notificationOpen.notification;

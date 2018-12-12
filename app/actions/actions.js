@@ -1,6 +1,7 @@
 import {AsyncStorage} from 'react-native';
 import {makeAuthUrl, getLogUrl, getLogData, IMEI} from '../config/consts'
 import xml2js from 'react-native-xml2js'
+import Geocoder from 'react-native-geocoder-reborn';
 
 export const getToken = (token) => ({
   type: 'GET_TOKEN',
@@ -51,6 +52,13 @@ export const getLog = (token, imei, from, to) => {
               console.warn(err);
               reject("Failed to parse results");
             }
+            /*data.fullTrips.trip.map((data) => {
+              console.log(data.departure[0]);
+              Geocoder.geocodeAddress(data.departure[0]).then(res => {
+                console.warn(res);
+              })
+                .catch(err => console.log(err))
+            });*/
             dispatch(saveResults(result));
             resolve(result);
           });
