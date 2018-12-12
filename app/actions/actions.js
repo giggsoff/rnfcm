@@ -1,4 +1,6 @@
 import {AsyncStorage} from 'react-native';
+import {makeAuthUrl, getLogUrl, getLogData, IMEI} from '../config/consts'
+import xml2js from 'react-native-xml2js'
 
 export const getToken = (token) => ({
   type: 'GET_TOKEN',
@@ -19,10 +21,48 @@ export const loading = bool => ({
   isLoading: bool,
 });
 
+export const saveResults = results => ({
+  type: 'RESULTS',
+  results,
+});
+
 export const error = error => ({
   type: 'ERROR',
   error,
 });
+
+export const getLog = (token, imei, from, to) => {
+  imei = IMEI;
+  return (dispatch) => {
+    return fetch(getLogUrl(), {
+      method: 'POST',
+      headers: {
+        'x-apikey': token,
+        'Accept': 'application/xml',
+        'Content-Type': 'application/xml',
+        'User-Agent': 'Apache-HttpClient/4.1.1 (java 1.5)',
+      },
+      body: getLogData(imei, from, to)
+    }).then((data) => {
+      if (data.status !== 400 && data._bodyInit) {
+        return new Promise((resolve, reject) => {
+          xml2js.parseString(data._bodyInit, function (err, result) {
+            if (err) {
+              console.warn(err);
+              reject("Failed to parse results");
+            }
+            dispatch(saveResults(result));
+            resolve(result);
+          });
+        });
+      } else {
+        return new Promise((resolve, reject) => {
+          throw new Error("Failed to fetch results");
+        });
+      }
+    })
+  }
+};
 
 export const login = (username, password, number, imei) => {
   return (dispatch) => {
@@ -34,25 +74,40 @@ export const login = (username, password, number, imei) => {
         throw new Error("Failed to auth");
       });
     }
-    /*fetch('http://192.168.0.115:8080/api/user', {
-      method: 'POST',
+    imei = IMEI;
+    return fetch(makeAuthUrl(username, password, number, imei), {
+      method: 'GET',
       headers: {
         'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({username: username, password: password})
-    })
-      .then((res) => res.json())*/
-    console.warn("OK");
-    return AsyncStorage.setItem('userToken', 'abc').then(res => {
-      dispatch(loading(false));
-      dispatch(error(false));
-      dispatch(saveToken('token saved'));
-    })
-      .catch((err) => {
+        'User-Agent': 'Apache-HttpClient/4.1.1 (java 1.5)',
+      }
+    }).then((data) => {
+      console.warn(data);
+      if (data.status !== 400 && data._bodyText) {
+        let token = data._bodyText.replace("Resource created (", "").replace(")", "");
+        return AsyncStorage.setItem('userToken', token).then(res => {
+          dispatch(loading(false));
+          dispatch(error(false));
+          dispatch(saveToken(token));
+        })
+          .catch((err) => {
+            dispatch(loading(false));
+            dispatch(error(err.message || 'ERROR'));
+          });
+      } else {
         dispatch(loading(false));
-        dispatch(error(err.message || 'ERROR'));
+        dispatch(error(true));
+        return new Promise((resolve, reject) => {
+          throw new Error("Failed to auth");
+        });
+      }
+    }).catch((err) => {
+      dispatch(loading(false));
+      dispatch(error(err.message || 'ERROR'));
+      return new Promise((resolve, reject) => {
+        throw new Error("Failed to auth");
       });
+    });
   }
 };
 
@@ -66,20 +121,6 @@ export const getUserToken = () => dispatch =>
       dispatch(loading(false));
       dispatch(error(err.message || 'ERROR'));
     });
-
-
-export const saveUserToken = () => dispatch => {
-  console.warn(this.props);
-  return AsyncStorage.setItem('userToken', 'abc')
-    .then((data) => {
-      dispatch(loading(false));
-      dispatch(saveToken('token saved'));
-    })
-    .catch((err) => {
-      dispatch(loading(false));
-      dispatch(error(err.message || 'ERROR'));
-    })
-};
 
 export const removeUserToken = () => dispatch =>
   AsyncStorage.removeItem('userToken')

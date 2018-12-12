@@ -1,7 +1,8 @@
 import React, {Component} from 'react';
 import {StyleSheet, View, Text, Button, RefreshControl, Modal, Platform} from 'react-native';
 import GridView from 'react-native-super-grid';
-import {removeUserToken} from '../actions/actions';
+import {getLog} from '../actions/actions';
+import {startBackgroundTimer} from '../actions/timer';
 import {connect} from 'react-redux';
 import Calendar from 'react-native-calendar-select';
 import moment from 'moment';
@@ -14,6 +15,8 @@ class First extends Component {
   constructor(props, context, updater) {
     super(props, context, updater);
     this.state = {
+      DeviceIMEI: "",
+      token: null,
       startDate: moment(new Date()).subtract(1, 'month'),
       endDate: moment(new Date()),
       refreshing: false,
@@ -103,6 +106,12 @@ class First extends Component {
     this.openCalendar = this.openCalendar.bind(this);
   }
 
+  _getDeviceIMEI = () => {
+    const IMEI = require('react-native-imei');
+    this.setState({
+      DeviceIMEI: IMEI.getImei(),
+    })
+  };
   confirmDate({startDate, endDate, startMoment, endMoment}) {
     this.setState({
       startDate,
@@ -121,10 +130,23 @@ class First extends Component {
   _onRefresh = () => {
     this.setState({refreshing: true});
     console.warn("REFRESH");
-    console.warn(this.props.token);
+    console.warn(this.props);
+    console.warn(this.state);
     this.setState({refreshing: false});
+    this.props.startBackgroundTimer();
+    let { user, pass, number, DeviceIMEI } = this.state;
+    return this.props.getLog(this.props.token.token, DeviceIMEI, moment(this.state.startDate), moment(this.state.endDate)).then((data)=>{
+      console.warn(data);
+    }).catch((error) => {
+      this.setState({error: error.message});
+    });
   };
-
+  async componentDidMount() {
+    await this._getDeviceIMEI();
+  }
+  componentWillReceiveProps(nextProp){
+    console.warn(nextProp)
+  }
   render() {
     let color = {
       subColor: '#f0f0f0'
@@ -250,10 +272,12 @@ const styles = StyleSheet.create({
 
 const mapStateToProps = state => ({
   token: state.token,
+  results: state.results
 });
 
 const mapDispatchToProps = dispatch => ({
-  removeUserToken: () => dispatch(removeUserToken()),
+  getLog: (token, imei, from, to) => dispatch(getLog(token, imei, from, to)),
+  startBackgroundTimer: () => dispatch(startBackgroundTimer()),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(First);

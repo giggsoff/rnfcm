@@ -3,7 +3,7 @@ import {View, Text, PermissionsAndroid} from "react-native";
 import {Card, Button, FormLabel, FormInput} from "react-native-elements";
 
 import { connect } from 'react-redux';
-import { saveUserToken, login } from '../actions/actions';
+import { login } from '../actions/actions';
 
 class SignInScreen extends React.Component {
   constructor(props, context, updater) {

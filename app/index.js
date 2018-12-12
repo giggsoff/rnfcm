@@ -128,7 +128,6 @@ export default class App extends Component {
         return val;
       }));
       firebase.notifications().removeDeliveredNotification(notification.notificationId);
-
     });
   }
 

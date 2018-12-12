@@ -11,4 +11,3 @@ export default function configureStore(initialState) {
     compose(applyMiddleware(...middlewares)),
   );
 }
-
