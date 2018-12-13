@@ -135,15 +135,30 @@ class First extends Component {
                 </View>
                 <View style={[styles.itemContainer2]}>
                   <Text style={styles.itemDate}>Duration:</Text>
-                  <Text style={styles.itemName}>{item.duration[0]}</Text>
+                  <Text adjustsFontSizeToFit
+                        numberOfLines={1}
+                        minimumFontScale={.5}
+                        style={styles.itemName}>{item.duration[0]}</Text>
                   <Text style={styles.itemDate}>Departure:</Text>
-                  <Text style={styles.itemName}>{item.departure[0]}</Text>
+                  <Text adjustsFontSizeToFit
+                        numberOfLines={1}
+                        minimumFontScale={.5}
+                        style={styles.itemName}>{item.departure[0]}</Text>
                   <Text style={styles.itemDate}>Destination:</Text>
-                  <Text style={styles.itemName}>{item.destination[0]}</Text>
+                  <Text adjustsFontSizeToFit
+                        numberOfLines={1}
+                        minimumFontScale={.5}
+                        style={styles.itemName}>{item.destination[0]}</Text>
                   <Text style={styles.itemDate}>Start:</Text>
-                  <Text style={styles.itemName}>{moment(item.startTime[0]).calendar()}</Text>
+                  <Text adjustsFontSizeToFit
+                        numberOfLines={1}
+                        minimumFontScale={.5}
+                        style={styles.itemName}>{moment(item.startTime[0]).calendar()}</Text>
                   <Text style={styles.itemDate}>End:</Text>
-                  <Text style={styles.itemName}>{moment(item.endTime[0]).calendar()}</Text>
+                  <Text adjustsFontSizeToFit
+                        numberOfLines={1}
+                        minimumFontScale={.5}
+                        style={styles.itemName}>{moment(item.endTime[0]).calendar()}</Text>
                 </View>
               </View>
             </TouchableOpacity>
