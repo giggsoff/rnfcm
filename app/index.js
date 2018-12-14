@@ -16,7 +16,7 @@ export default class App extends Component {
       checkedSignIn: false
     };
     const initialState = {
-      token : null
+      token: null
     };
     this.store = configureStore(initialState);
   }
@@ -133,10 +133,18 @@ export default class App extends Component {
   }
 
   componentWillUnmount() {
-    this.notificationDisplayedListener();
-    this.notificationListener();
-    this.notificationOpenedListener();
-    this.messageListener();
+    if (this.notificationDisplayedListener) {
+      this.notificationDisplayedListener();
+    }
+    if (this.notificationListener) {
+      this.notificationListener();
+    }
+    if (this.notificationOpenedListener) {
+      this.notificationOpenedListener();
+    }
+    if (this.messageListener) {
+      this.messageListener();
+    }
   }
 
   render() {
